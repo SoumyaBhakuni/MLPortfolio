@@ -1,0 +1,11 @@
+{
+  "n_components": 2,
+  "explained_variance_ratio": [
+    0.729624,
+    0.228508
+  ],
+  "cumulative_explained_variance": [
+    0.729624,
+    0.958132
+  ]
+}

@@ -1,0 +1,101 @@
+[
+  {
+    "file": "sample_crimson.png",
+    "engine": "Deterministic RGB/Feature Fallback",
+    "top_1": "Crimson Specimen",
+    "confidence": 1.0,
+    "top_5": [
+      {
+        "class_id": "IMG_01",
+        "label": "Crimson Specimen",
+        "confidence": 1.0
+      },
+      {
+        "class_id": "IMG_02",
+        "label": "Foliage Green",
+        "confidence": 0.0
+      },
+      {
+        "class_id": "IMG_03",
+        "label": "Azure Field",
+        "confidence": 0.0
+      },
+      {
+        "class_id": "IMG_04",
+        "label": "Texture Pattern",
+        "confidence": 0.0
+      },
+      {
+        "class_id": "IMG_05",
+        "label": "General Object",
+        "confidence": 0.0
+      }
+    ]
+  },
+  {
+    "file": "sample_emerald.png",
+    "engine": "Deterministic RGB/Feature Fallback",
+    "top_1": "Crimson Specimen",
+    "confidence": 0.0,
+    "top_5": [
+      {
+        "class_id": "IMG_01",
+        "label": "Crimson Specimen",
+        "confidence": 0.0
+      },
+      {
+        "class_id": "IMG_02",
+        "label": "Foliage Green",
+        "confidence": 1.0
+      },
+      {
+        "class_id": "IMG_03",
+        "label": "Azure Field",
+        "confidence": 0.0
+      },
+      {
+        "class_id": "IMG_04",
+        "label": "Texture Pattern",
+        "confidence": 0.0
+      },
+      {
+        "class_id": "IMG_05",
+        "label": "General Object",
+        "confidence": 0.0
+      }
+    ]
+  },
+  {
+    "file": "sample_azure.png",
+    "engine": "Deterministic RGB/Feature Fallback",
+    "top_1": "Crimson Specimen",
+    "confidence": 0.0,
+    "top_5": [
+      {
+        "class_id": "IMG_01",
+        "label": "Crimson Specimen",
+        "confidence": 0.0
+      },
+      {
+        "class_id": "IMG_02",
+        "label": "Foliage Green",
+        "confidence": 0.0
+      },
+      {
+        "class_id": "IMG_03",
+        "label": "Azure Field",
+        "confidence": 1.0
+      },
+      {
+        "class_id": "IMG_04",
+        "label": "Texture Pattern",
+        "confidence": 0.0
+      },
+      {
+        "class_id": "IMG_05",
+        "label": "General Object",
+        "confidence": 0.0
+      }
+    ]
+  }
+]

@@ -1,0 +1,172 @@
+import { useEffect, useState } from 'react';
+import SectionHeading from '../../components/SectionHeading';
+import MetricCard from '../../components/MetricCard';
+import ChartContainer from '../../components/ChartContainer';
+import LoadingState from '../../components/LoadingState';
+import { classifyImage } from '../../services/api';
+
+export default function ImageClassification() {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let ignore = false;
+    classifyImage({})
+      .then((data) => {
+        if (!ignore) {
+          setResult(data);
+          setError('');
+        }
+      })
+      .catch((err) => {
+        if (!ignore) setError(err.message);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
+  const handleClassify = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const data = await classifyImage({ file: selectedFile });
+      setResult(data);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const top1Label = result?.predicted_class ?? result?.top_1 ?? '—';
+  const maxTop5Confidence = Math.max(
+    0,
+    ...(result?.top_5 || []).map((item) => Number(item?.confidence ?? 0))
+  );
+  const top1Confidence =
+    Number(result?.confidence) > 0 ? Number(result.confidence) : maxTop5Confidence;
+  const shapeText = Array.isArray(result?.input_shape)
+    ? result.input_shape.join('x')
+    : '224x224x3';
+
+  return (
+    <div className="max-w-[1440px] mx-auto border-x border-b border-white/10 bg-[#0A0A0C]/90">
+      <SectionHeading
+        code="TASK_03"
+        title="IMAGE_CLASSIFICATION (PRE-TRAINED VISION MODEL)"
+        rightLabel="/api/task03/classify"
+        accent="#F59E0B"
+      />
+
+      <div className="p-6 sm:p-8 space-y-6">
+        <form
+          onSubmit={handleClassify}
+          className="flex flex-wrap items-center gap-4 p-4 border border-white/10 bg-white/[0.02]"
+        >
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="font-mono text-xs text-zinc-300 file:mr-3 file:px-3 file:py-1.5 file:border file:border-white/20 file:bg-[#0D0E12] file:text-zinc-200"
+          />
+          <button
+            type="submit"
+            className="px-5 py-2.5 font-mono text-xs font-bold text-[#0A0A0C] bg-amber-400 hover:brightness-110 cursor-pointer"
+          >
+            {selectedFile ? 'CLASSIFY_UPLOADED_IMAGE' : 'RUN_SAMPLE_TEST_IMAGE'}
+          </button>
+        </form>
+
+        {loading && <LoadingState label="RUNNING_224x224_IMAGE_INFERENCE..." />}
+        {error && (
+          <div className="p-4 border border-amber-500/40 font-mono text-xs text-amber-200">
+            {error}
+          </div>
+        )}
+
+        {result && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="min-w-0">
+                <MetricCard label="TOP-1 PREDICTION" value={top1Label} accent="#F59E0B" />
+              </div>
+              <div className="min-w-0">
+                <MetricCard
+                  label="CONFIDENCE"
+                  value={`${(top1Confidence * 100).toFixed(2)}%`}
+                  accent="#10B981"
+                />
+              </div>
+              <div className="min-w-0">
+                <MetricCard label="ENGINE" value={result.engine ?? '—'} accent="#22D3EE" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {previewUrl && (
+                <div className="lg:col-span-4">
+                  <ChartContainer title="Uploaded Input Image" subtitle={`Resized to ${shapeText}`}>
+                    <img
+                      src={previewUrl}
+                      alt="Uploaded preview"
+                      className="w-full max-h-64 object-contain border border-white/10"
+                    />
+                  </ChartContainer>
+                </div>
+              )}
+
+              <div className={previewUrl ? 'lg:col-span-8' : 'lg:col-span-12'}>
+                <ChartContainer
+                  title="Top-5 Predicted Classes"
+                  subtitle={`Ranked probability distribution · Input ${shapeText}`}
+                >
+                  <div className="space-y-3 font-mono text-xs">
+                    {(result.top_5 || []).map((item) => {
+                      const conf = Number(item.confidence ?? 0);
+                      const pct = Math.min(100, Math.max(0, conf * 100));
+                      return (
+                        <div key={item.class_id} className="space-y-1">
+                          <div className="flex justify-between text-zinc-200">
+                            <span>{item.label}</span>
+                            <span className="text-amber-300">{pct.toFixed(2)}%</span>
+                          </div>
+                          <div className="h-2 bg-white/10 overflow-hidden">
+                            <div className="h-full bg-amber-400" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ChartContainer>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
