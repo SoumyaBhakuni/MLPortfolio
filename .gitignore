@@ -1,0 +1,23 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+
+# LaTeX build artifacts
+report/output/*
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+
+# OS / IDE
+.DS_Store
+.vscode/
+.env
