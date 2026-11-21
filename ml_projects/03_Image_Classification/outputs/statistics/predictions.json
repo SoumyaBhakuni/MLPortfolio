@@ -1,9 +1,124 @@
 [
   {
-    "file": "sample_checkerboard.png",
+    "file": "sample_red_object.png",
+    "true_label": "Red Object / Fruit",
+    "predicted_label": "ping-pong ball",
+    "top_1": "ping-pong ball",
+    "confidence": 0.7144,
     "engine": "MobileNetV2 (ImageNet)",
+    "is_fallback": false,
+    "correct": false,
+    "top_5": [
+      {
+        "class_id": "n03942813",
+        "label": "ping-pong ball",
+        "confidence": 0.7144
+      },
+      {
+        "class_id": "n03314780",
+        "label": "face powder",
+        "confidence": 0.0608
+      },
+      {
+        "class_id": "n04409515",
+        "label": "tennis ball",
+        "confidence": 0.019
+      },
+      {
+        "class_id": "n03920288",
+        "label": "Petri dish",
+        "confidence": 0.0144
+      },
+      {
+        "class_id": "n02782093",
+        "label": "balloon",
+        "confidence": 0.013
+      }
+    ]
+  },
+  {
+    "file": "sample_orange_object.png",
+    "true_label": "Orange Object / Fruit",
+    "predicted_label": "face powder",
+    "top_1": "face powder",
+    "confidence": 0.3995,
+    "engine": "MobileNetV2 (ImageNet)",
+    "is_fallback": false,
+    "correct": false,
+    "top_5": [
+      {
+        "class_id": "n03314780",
+        "label": "face powder",
+        "confidence": 0.3995
+      },
+      {
+        "class_id": "n03942813",
+        "label": "ping-pong ball",
+        "confidence": 0.2886
+      },
+      {
+        "class_id": "n07747607",
+        "label": "orange",
+        "confidence": 0.0288
+      },
+      {
+        "class_id": "n02782093",
+        "label": "balloon",
+        "confidence": 0.0171
+      },
+      {
+        "class_id": "n04209133",
+        "label": "shower cap",
+        "confidence": 0.0134
+      }
+    ]
+  },
+  {
+    "file": "sample_clock_dial.png",
+    "true_label": "Clock / Dial",
+    "predicted_label": "bolo tie",
+    "top_1": "bolo tie",
+    "confidence": 0.6072,
+    "engine": "MobileNetV2 (ImageNet)",
+    "is_fallback": false,
+    "correct": false,
+    "top_5": [
+      {
+        "class_id": "n02865351",
+        "label": "bolo tie",
+        "confidence": 0.6072
+      },
+      {
+        "class_id": "n04579432",
+        "label": "whistle",
+        "confidence": 0.0793
+      },
+      {
+        "class_id": "n04371774",
+        "label": "swing",
+        "confidence": 0.0247
+      },
+      {
+        "class_id": "n03627232",
+        "label": "knot",
+        "confidence": 0.0198
+      },
+      {
+        "class_id": "n03840681",
+        "label": "ocarina",
+        "confidence": 0.018
+      }
+    ]
+  },
+  {
+    "file": "sample_grid_pattern.png",
+    "true_label": "Grid / Geometric Pattern",
+    "predicted_label": "crossword puzzle",
     "top_1": "crossword puzzle",
     "confidence": 0.5853,
+    "engine": "MobileNetV2 (ImageNet)",
+    "is_fallback": false,
+    "correct": false,
     "top_5": [
       {
         "class_id": "n06785654",
@@ -29,72 +144,6 @@
         "class_id": "n04239074",
         "label": "sliding door",
         "confidence": 0.0072
-      }
-    ]
-  },
-  {
-    "file": "sample_radial_wave.png",
-    "engine": "MobileNetV2 (ImageNet)",
-    "top_1": "maze",
-    "confidence": 0.7785,
-    "top_5": [
-      {
-        "class_id": "n03733281",
-        "label": "maze",
-        "confidence": 0.7785
-      },
-      {
-        "class_id": "n03065424",
-        "label": "coil",
-        "confidence": 0.1976
-      },
-      {
-        "class_id": "n03134739",
-        "label": "croquet ball",
-        "confidence": 0.0054
-      },
-      {
-        "class_id": "n03992509",
-        "label": "potter's wheel",
-        "confidence": 0.0012
-      },
-      {
-        "class_id": "n03775546",
-        "label": "mixing bowl",
-        "confidence": 0.0005
-      }
-    ]
-  },
-  {
-    "file": "sample_geometric_shapes.png",
-    "engine": "MobileNetV2 (ImageNet)",
-    "top_1": "envelope",
-    "confidence": 0.0877,
-    "top_5": [
-      {
-        "class_id": "n03291819",
-        "label": "envelope",
-        "confidence": 0.0877
-      },
-      {
-        "class_id": "n02786058",
-        "label": "Band Aid",
-        "confidence": 0.08
-      },
-      {
-        "class_id": "n02708093",
-        "label": "analog clock",
-        "confidence": 0.0335
-      },
-      {
-        "class_id": "n04286575",
-        "label": "spotlight",
-        "confidence": 0.0238
-      },
-      {
-        "class_id": "n02834397",
-        "label": "bib",
-        "confidence": 0.0171
       }
     ]
   }
