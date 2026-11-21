@@ -2,6 +2,7 @@ import os
 import re
 from typing import Any
 import joblib
+import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
@@ -9,53 +10,53 @@ from config import Config
 from utils.metrics import classification_metrics_dict
 from utils.preprocessing import ensure_dir
 
-_SAMPLE_CORPUS = [
-    ("Win a free iPhone now! Click here to claim your cash prize immediately.", 1),
-    ("URGENT! Your account has been selected for a $1000 reward. Reply WIN.", 1),
-    ("Congratulations! You won free entry to a weekly contest. Text CLAIM now.", 1),
-    ("Limited time offer: cheap loans approved instantly with zero credit check.", 1),
-    ("Free ringtones and exclusive bonus credits waiting for you today.", 1),
-    ("Hey are we still meeting for lunch at 1 pm near the library?", 0),
-    ("Can you send me the notes from today's machine learning lecture?", 0),
-    ("I will reach home in twenty minutes, let me know if you need groceries.", 0),
-    ("Did you push the latest commit to the GitHub repository?", 0),
-    ("Let's review the internship report draft tomorrow morning.", 0),
-    ("Claim your free gift card today by visiting our promo link.", 1),
-    ("Call this number now to collect your lottery voucher!", 1),
-    ("Reminder: team sync starts in ten minutes on the project channel.", 0),
-    ("Thanks for helping debug the API route earlier.", 0),
-    ("Exclusive deal just for you: buy one get one free voucher code.", 1),
-    ("Don't forget to bring your laptop for the lab session.", 0),
-]
+_MODEL_CACHE = None
 
 
 def _preprocess_text(text: str) -> str:
-    lowered = text.lower().strip()
+    lowered = str(text).lower().strip()
     cleaned = re.sub(r"[^a-z0-9\s]", " ", lowered)
     return re.sub(r"\s+", " ", cleaned).strip()
 
 
-def _train_or_load_nb():
+def _load_or_train_nb():
+    global _MODEL_CACHE
+    if _MODEL_CACHE is not None:
+        return _MODEL_CACHE
+
     model_path = os.path.join(Config.MODELS_DIR, "classification", "naive_bayes.joblib")
-    texts = [_preprocess_text(t) for t, _ in _SAMPLE_CORPUS]
-    labels = [y for _, y in _SAMPLE_CORPUS]
+    if os.path.exists(model_path):
+        bundle = joblib.load(model_path)
+        _MODEL_CACHE = (bundle["vectorizer"], bundle["model"], bundle.get("metrics", {}))
+        return _MODEL_CACHE
+
+    csv_path = os.path.abspath(
+        os.path.join(Config.BASE_DIR, "..", "ml_projects", "06_Naive_Bayes", "dataset", "sms_spam.csv")
+    )
+    df = pd.read_csv(csv_path).dropna(subset=["label", "message"])
+    df["label"] = df["label"].astype(str).str.strip().str.lower()
+    df = df[df["label"].isin(["ham", "spam"])]
+
+    texts = [_preprocess_text(t) for t in df["message"]]
+    labels = [1 if lbl == "spam" else 0 for lbl in df["label"]]
 
     X_train, X_test, y_train, y_test = train_test_split(
-        texts, labels, test_size=0.25, random_state=42, stratify=labels
+        texts, labels, test_size=0.2, random_state=42, stratify=labels
     )
 
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), max_features=5000)
     X_train_vec = vectorizer.fit_transform(X_train)
     X_test_vec = vectorizer.transform(X_test)
 
-    clf = MultinomialNB(alpha=1.0)
+    clf = MultinomialNB(alpha=0.5)
     clf.fit(X_train_vec, y_train)
     preds_test = clf.predict(X_test_vec)
     metrics = classification_metrics_dict(y_test, preds_test, labels=[0, 1], average="binary")
 
     ensure_dir(os.path.dirname(model_path))
-    joblib.dump({"vectorizer": vectorizer, "model": clf}, model_path)
-    return vectorizer, clf, metrics
+    joblib.dump({"vectorizer": vectorizer, "model": clf, "metrics": metrics}, model_path)
+    _MODEL_CACHE = (vectorizer, clf, metrics)
+    return _MODEL_CACHE
 
 
 def predict_spam_message(message: Any) -> dict[str, Any]:
@@ -63,7 +64,7 @@ def predict_spam_message(message: Any) -> dict[str, Any]:
     if not isinstance(message, str) or not message.strip():
         raise ValueError("'message' must be a non-empty string.")
 
-    vectorizer, clf, metrics = _train_or_load_nb()
+    vectorizer, clf, metrics = _load_or_train_nb()
     processed = _preprocess_text(message)
     vec = vectorizer.transform([processed])
     pred_label = int(clf.predict(vec)[0])

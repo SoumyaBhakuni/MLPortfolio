@@ -9,26 +9,24 @@ from config import Config
 from utils.metrics import regression_metrics_dict
 from utils.preprocessing import ensure_dir
 
-
-def _load_housing_df() -> pd.DataFrame:
+def _load_housing_df() -> tuple[pd.DataFrame, bool]:
     csv_path = os.path.join(
         Config.ML_PROJECTS_DIR, "02_Linear_Regression", "dataset", "housing.csv"
     )
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path).dropna()
         if {"area_sqft", "price_usd"}.issubset(df.columns):
-            return df[["area_sqft", "price_usd"]]
+            return df[["area_sqft", "price_usd"]], False
 
     rng = np.random.default_rng(42)
     area = np.linspace(500, 4000, 120)
     noise = rng.normal(0, 22000, size=len(area))
     price = 45000 + 115.0 * area + noise
-    return pd.DataFrame({"area_sqft": np.round(area, 1), "price_usd": np.round(price, 2)})
-
+    return pd.DataFrame({"area_sqft": np.round(area, 1), "price_usd": np.round(price, 2)}), True
 
 def _get_trained_model() -> tuple[LinearRegression, pd.DataFrame, dict[str, float]]:
     model_path = os.path.join(Config.MODELS_DIR, "regression", "linear_regression.joblib")
-    df = _load_housing_df()
+    df, is_synthetic = _load_housing_df()
     X = df[["area_sqft"]].values
     y = df["price_usd"].values
 
@@ -42,7 +40,7 @@ def _get_trained_model() -> tuple[LinearRegression, pd.DataFrame, dict[str, floa
 
     ensure_dir(os.path.dirname(model_path))
     joblib.dump(model, model_path)
-    return model, df, metrics
+    return model, df, metrics, is_synthetic
 
 
 def predict_linear_regression(area_sqft: Any) -> dict[str, Any]:
@@ -55,7 +53,7 @@ def predict_linear_regression(area_sqft: Any) -> dict[str, Any]:
     if not np.isfinite(area_val) or area_val <= 0:
         raise ValueError("'area_sqft' must be a positive finite number.")
 
-    model, df, metrics = _get_trained_model()
+    model, df, metrics, is_synthetic = _get_trained_model()
     predicted_price = float(model.predict(np.array([[area_val]]))[0])
 
     x_min, x_max = float(df["area_sqft"].min()), float(df["area_sqft"].max())
@@ -81,4 +79,10 @@ def predict_linear_regression(area_sqft: Any) -> dict[str, Any]:
             "y": [round(float(v), 2) for v in line_y],
         },
         "sample_points": sample_points,
+        "is_synthetic": is_synthetic,
+        "dataset_provenance": (
+            "Synthetic demonstration data (seed=42, area_sqft in [500, 4000])"
+            if is_synthetic
+            else "Local CSV dataset (02_Linear_Regression/dataset/housing.csv)"
+        ),
     }

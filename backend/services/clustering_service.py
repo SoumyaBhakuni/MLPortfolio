@@ -9,14 +9,14 @@ from config import Config
 from utils.preprocessing import ensure_dir
 
 
-def _load_customer_df() -> pd.DataFrame:
+def _load_customer_df() -> tuple[pd.DataFrame, bool]:
     csv_path = os.path.join(
         Config.ML_PROJECTS_DIR, "04_KMeans_Clustering", "dataset", "customers.csv"
     )
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path).dropna()
         if {"annual_income_k", "spending_score"}.issubset(df.columns):
-            return df[["annual_income_k", "spending_score"]]
+            return df[["annual_income_k", "spending_score"]], False
 
     rng = np.random.default_rng(42)
     centers = [(25, 78), (30, 22), (55, 50), (85, 82), (82, 18)]
@@ -29,7 +29,7 @@ def _load_customer_df() -> pd.DataFrame:
                 "annual_income_k": round(float(np.clip(x_val, 10, 140)), 2),
                 "spending_score": round(float(np.clip(y_val, 1, 100)), 2),
             })
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows), True
 
 
 def run_kmeans_clustering(n_clusters: Any = 5) -> dict[str, Any]:
@@ -42,7 +42,7 @@ def run_kmeans_clustering(n_clusters: Any = 5) -> dict[str, Any]:
     if k < 2 or k > 10:
         raise ValueError("'n_clusters' must be between 2 and 10.")
 
-    df = _load_customer_df()
+    df, is_synthetic = _load_customer_df()
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(df[["annual_income_k", "spending_score"]].values)
 
@@ -87,4 +87,10 @@ def run_kmeans_clustering(n_clusters: Any = 5) -> dict[str, Any]:
         "elbow": elbow,
         "centroids": centroids,
         "points": points,
+        "is_synthetic": is_synthetic,
+        "dataset_provenance": (
+            "Synthetic demonstration data (120 rows across 5 Gaussian centers, seed=42)"
+            if is_synthetic
+            else "Local CSV dataset (04_KMeans_Clustering/dataset/customers.csv)"
+        ),
     }

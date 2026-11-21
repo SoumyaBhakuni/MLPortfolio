@@ -69,6 +69,10 @@ export default function EDA() {
   const corrMatrix = payload?.correlation?.matrix || [];
   const summaryStats = payload?.statistics || [];
   const findings = payload?.findings || [];
+  const totalRows = overview.total_rows ?? 150;
+  const totalCols = overview.total_columns ?? 5;
+  const missingValues = overview.missing_values ?? 0;
+  const duplicateRows = overview.duplicate_rows ?? 0;
 
   const scatterPoints = useMemo(() => {
     const records = payload?.records || [];
@@ -147,6 +151,76 @@ export default function EDA() {
       />
 
       <div className="p-6 sm:p-8 space-y-6">
+        {/* 01. Overview & 02. Objective / Problem Statement */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-cyan-400">
+              01 // OVERVIEW
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Provides descriptive statistics, Pearson correlation structure, and interactive
+              bivariate scatter inspection across the classic{' '}
+              <span className="text-white">{totalRows}-record Iris dataset</span> prior to
+              downstream classification, clustering, or dimensionality reduction.
+            </p>
+          </div>
+
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-cyan-400">
+              02 // OBJECTIVE & PROBLEM STATEMENT
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Audit data completeness, distribution spread, and inter-feature relationships across{' '}
+              <span className="text-white">Setosa</span>,{' '}
+              <span className="text-white">Versicolor</span>, and{' '}
+              <span className="text-white">Virginica</span> to verify class separability and
+              identify redundant or collinear measurements.
+            </p>
+          </div>
+        </div>
+
+        {/* 03. Dataset Description, 04. Algorithm Explanation & 05. Workflow / Methodology */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
+              03 // DATASET DESCRIPTION
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Covers <span className="text-white">{totalRows} observations</span> and{' '}
+              <span className="text-white">{totalCols} columns</span>: four continuous morphological
+              measurements (<span className="text-white">sepal length</span>,{' '}
+              <span className="text-white">sepal width</span>,{' '}
+              <span className="text-white">petal length</span>, and{' '}
+              <span className="text-white">petal width</span> in cm) plus the categorical{' '}
+              <span className="text-white">species</span> label across three classes.
+            </p>
+          </div>
+
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+              04 // ALGORITHM EXPLANATION
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Computes first- and second-order moments (mean, variance, standard deviation),
+              order statistics (minimum, Q25, median, Q75, maximum), data-quality counts (missing
+              cells and duplicate rows), and pairwise Pearson correlation coefficients{' '}
+              <span className="text-white">r ∈ [-1, 1]</span>.
+            </p>
+          </div>
+
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-purple-400">
+              05 // WORKFLOW & METHODOLOGY
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Loads the <span className="text-white">{totalRows}-record</span> Iris table from
+              the Flask EDA endpoint, validates missing/duplicate counts on raw records without
+              synthetic imputation, builds the correlation matrix across numeric columns, and maps
+              selected X/Y axes onto the scatter explorer.
+            </p>
+          </div>
+        </div>
+
         {loading && <LoadingState label="LOADING_IRIS_EDA_PROFILE..." />}
         {error && (
           <div className="p-4 border border-amber-500/40 bg-amber-500/10 font-mono text-xs text-amber-200">
@@ -156,93 +230,114 @@ export default function EDA() {
 
         {payload && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <MetricCard label="ROWS" value={overview.total_rows ?? 150} accent="#22D3EE" />
-              <MetricCard label="COLUMNS" value={overview.total_columns ?? 5} accent="#10B981" />
-              <MetricCard label="MISSING VALUES" value={overview.missing_values ?? 0} accent="#F59E0B" />
-              <MetricCard label="DUPLICATES" value={overview.duplicate_rows ?? 0} accent="#A855F7" />
+            {/* 08. Evaluation Metrics (Dataset Quality & Profiling Metrics) */}
+            <div className="space-y-2">
+              <div className="font-mono text-[10px] uppercase tracking-wider text-cyan-400">
+                08 // EVALUATION METRICS — DATASET PROFILE & INTEGRITY ({totalRows} RECORDS)
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <MetricCard label="ROWS" value={totalRows} accent="#22D3EE" />
+                <MetricCard label="COLUMNS" value={totalCols} accent="#10B981" />
+                <MetricCard label="MISSING VALUES" value={missingValues} accent="#F59E0B" />
+                <MetricCard label="DUPLICATES" value={duplicateRows} accent="#A855F7" />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-7">
-                <ChartContainer
-                  title="Interactive Feature Scatter Explorer"
-                  subtitle="Select X and Y axes across Iris morphological dimensions"
-                  rightSlot={
-                    <div className="flex flex-wrap gap-2 font-mono text-[11px]">
-                      <select
-                        value={xFeature}
-                        onChange={(e) => setXFeature(e.target.value)}
-                        className="bg-[#0D0E12] border border-white/15 px-2 py-1 text-zinc-200"
-                      >
-                        {numericCols.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        value={yFeature}
-                        onChange={(e) => setYFeature(e.target.value)}
-                        className="bg-[#0D0E12] border border-white/15 px-2 py-1 text-zinc-200"
-                      >
-                        {numericCols.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  }
-                >
-                  {renderScatterSvg()}
-                  <div className="mt-3 flex items-center gap-4 font-mono text-[11px]">
-                    {Object.entries(SPECIES_COLORS).map(([name, color]) => (
-                      <span key={name} className="inline-flex items-center gap-1.5 text-zinc-300">
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-                        {name}
-                      </span>
-                    ))}
-                  </div>
-                </ChartContainer>
+            {/* 07. Visualizations & 06. Interactive Demo (Scatter Explorer + Correlation + Summary Table) */}
+            <div className="space-y-2">
+              <div className="font-mono text-[10px] uppercase tracking-wider text-cyan-400">
+                06 & 07 // INTERACTIVE DEMO & VISUALIZATIONS — SCATTER EXPLORER & CORRELATIONS
               </div>
-
-              <div className="lg:col-span-5">
-                <ChartContainer title="Correlation Matrix" subtitle="Pearson r across numeric features">
-                  <div className="overflow-x-auto">
-                    <table className="w-full font-mono text-[11px] text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-white/10 text-zinc-400">
-                          <th className="py-2 pr-2">Feature</th>
-                          {corrColumns.map((c) => (
-                            <th key={c} className="py-2 px-1.5">
-                              {c.split(' ')[0]}
-                            </th>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-7">
+                  <ChartContainer
+                    title="Interactive Feature Scatter Explorer"
+                    subtitle={`Select X and Y axes across ${totalRows} Iris records`}
+                    rightSlot={
+                      <div className="flex flex-wrap gap-2 font-mono text-[11px]">
+                        <select
+                          value={xFeature}
+                          onChange={(e) => setXFeature(e.target.value)}
+                          className="bg-[#0D0E12] border border-white/15 px-2 py-1 text-zinc-200"
+                        >
+                          {numericCols.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
                           ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {corrColumns.map((rowCol) => (
-                          <tr key={rowCol} className="border-b border-white/5">
-                            <td className="py-2 pr-2 text-zinc-300">{rowCol}</td>
-                            {corrColumns.map((colKey) => {
-                              const val = getCorrelationValue(rowCol, colKey);
-                              return (
-                                <td key={colKey} className="py-2 px-1.5 text-cyan-300">
-                                  {val.toFixed(2)}
-                                </td>
-                              );
-                            })}
+                        </select>
+                        <select
+                          value={yFeature}
+                          onChange={(e) => setYFeature(e.target.value)}
+                          className="bg-[#0D0E12] border border-white/15 px-2 py-1 text-zinc-200"
+                        >
+                          {numericCols.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    }
+                  >
+                    {renderScatterSvg()}
+                    <div className="mt-3 flex items-center gap-4 font-mono text-[11px]">
+                      {Object.entries(SPECIES_COLORS).map(([name, color]) => (
+                        <span key={name} className="inline-flex items-center gap-1.5 text-zinc-300">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  </ChartContainer>
+                </div>
+
+                <div className="lg:col-span-5">
+                  <ChartContainer
+                    title="Correlation Matrix"
+                    subtitle={`Pearson r across numeric features (n = ${totalRows})`}
+                  >
+                    <div className="overflow-x-auto">
+                      <table className="w-full font-mono text-[11px] text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-white/10 text-zinc-400">
+                            <th className="py-2 pr-2">Feature</th>
+                            {corrColumns.map((c) => (
+                              <th key={c} className="py-2 px-1.5">
+                                {c.split(' ')[0]}
+                              </th>
+                            ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </ChartContainer>
+                        </thead>
+                        <tbody>
+                          {corrColumns.map((rowCol) => (
+                            <tr key={rowCol} className="border-b border-white/5">
+                              <td className="py-2 pr-2 text-zinc-300">{rowCol}</td>
+                              {corrColumns.map((colKey) => {
+                                const val = getCorrelationValue(rowCol, colKey);
+                                return (
+                                  <td key={colKey} className="py-2 px-1.5 text-cyan-300">
+                                    {val.toFixed(2)}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </ChartContainer>
+                </div>
               </div>
             </div>
 
-            <ChartContainer title="Summary Statistics" subtitle="Mean, Median, Std Dev, Variance, Min, Quartiles, Max">
+            <ChartContainer
+              title="Summary Statistics"
+              subtitle={`Mean, Median, Std Dev, Variance, Min, Quartiles, Max · ${totalRows} records`}
+            >
               <div className="overflow-x-auto">
                 <table className="w-full font-mono text-xs text-left border-collapse">
                   <thead>
@@ -277,15 +372,42 @@ export default function EDA() {
               </div>
             </ChartContainer>
 
-            {findings.length > 0 && (
-              <ChartContainer title="Key EDA Findings" subtitle="Automated dataset observations">
-                <ul className="space-y-1.5 font-mono text-xs text-zinc-300 list-disc pl-5">
-                  {findings.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </ChartContainer>
-            )}
+            {/* 09. Key Findings & 10. Conclusion */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+                <div className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
+                  09 // KEY FINDINGS
+                </div>
+                {findings.length > 0 ? (
+                  <ul className="space-y-1.5 font-mono text-xs text-zinc-300 list-disc pl-5">
+                    {findings.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+                    Across all <span className="text-white">{totalRows}</span> Iris observations,
+                    petal length and petal width show strong positive correlation and isolate{' '}
+                    <span className="text-white">Setosa</span> cleanly, while{' '}
+                    <span className="text-white">Versicolor</span> and{' '}
+                    <span className="text-white">Virginica</span> exhibit closer overlap along
+                    boundary measurements.
+                  </p>
+                )}
+              </div>
+
+              <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+                <div className="font-mono text-[10px] uppercase tracking-wider text-cyan-400">
+                  10 // CONCLUSION
+                </div>
+                <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+                  Profiling the full <span className="text-white">{totalRows}-record</span> Iris
+                  dataset confirms clean completeness and clear feature-scale differences, guiding
+                  subsequent classification, dimensionality reduction, and margin-based modeling
+                  tasks.
+                </p>
+              </div>
+            </div>
           </>
         )}
       </div>

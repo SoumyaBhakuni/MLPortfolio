@@ -41,7 +41,7 @@ export const ML_LABS = [
     algorithm: 'Ordinary Least Squares Linear Regression',
     category: 'Supervised',
     status: 'IMPLEMENTED',
-    dataset: 'Housing Price Dataset (area_sqft -> price_usd)',
+    dataset: 'Synthetic Housing Dataset (area_sqft -> price_usd)',
     folder: 'ml_projects/02_Linear_Regression',
     endpoint: '/api/task02/predict',
     accent: '#10B981',
@@ -89,7 +89,7 @@ export const ML_LABS = [
     algorithm: 'Standardized K-Means & Elbow Inertia',
     category: 'Unsupervised',
     status: 'IMPLEMENTED',
-    dataset: 'Customer Segmentation (Income & Spending)',
+    dataset: 'Synthetic Customer Segmentation (Income & Spending)',
     folder: 'ml_projects/04_KMeans_Clustering',
     endpoint: '/api/task04/cluster',
     accent: '#A855F7',
@@ -185,17 +185,17 @@ export const ML_LABS = [
     algorithm: 'Multi-Layer Perceptron (ReLU / Softmax Probs)',
     category: 'Deep Learning',
     status: 'IMPLEMENTED',
-    dataset: 'Digits / Handwritten Canvas (8x8 or 28x28)',
+    dataset: 'Scikit-Learn Digits Dataset (1,797 x 8x8)',
     folder: 'ml_projects/08_Neural_Network',
     endpoint: '/api/task08/predict',
     accent: '#A855F7',
     summary:
-      'Accepts drawn canvas pixels (8x8 or 28x28) and predicts digits 0-9 with class probabilities and model metrics.',
+      'Accepts drawn canvas pixels (8x8) and predicts digits 0-9 with class probabilities and model metrics.',
     tags: ['MLPClassifier', 'ReLU', 'Canvas'],
     metrics: [
       { label: 'Digits', value: '0 - 9' },
       { label: 'Hidden', value: '(64, 32)' },
-      { label: 'Canvas', value: '8x8 / 28x28' }
+      { label: 'Canvas', value: '8x8' }
     ],
     chartType: 'regression-line'
   },

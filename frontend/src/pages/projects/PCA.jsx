@@ -146,6 +146,9 @@ export default function PCA() {
     );
   };
 
+  const explainedRatios = Array.isArray(result?.explained_variance_ratio)
+    ? result.explained_variance_ratio.map((v) => Number(v) || 0)
+    : [];
   const cumList = result?.cumulative_explained_variance || [];
   const totalCaptured =
     result?.total_retained_variance !== undefined
@@ -164,25 +167,101 @@ export default function PCA() {
       />
 
       <div className="p-6 sm:p-8 space-y-6">
-        <div className="flex flex-wrap items-center gap-3 p-4 border border-white/10 bg-white/[0.02] font-mono text-xs">
-          <span className="text-zinc-300">COMPONENTS (k):</span>
-          {[1, 2, 3, 4].map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => {
-                setNComponents(c);
-                runProjection(c);
-              }}
-              className={`px-3 py-1.5 border cursor-pointer ${
-                nComponents === c
-                  ? 'border-amber-400 bg-amber-400/20 text-amber-200 font-bold'
-                  : 'border-white/15 text-zinc-400'
-              }`}
-            >
-              k = {c}
-            </button>
-          ))}
+        {/* 01. Overview & 02. Objective / Problem Statement */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+              01 // OVERVIEW
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Projects standardized four-dimensional Iris measurements onto orthogonal{' '}
+              <span className="text-white">Principal Components (PC1..PCk)</span> using{' '}
+              <span className="text-white">PCA</span>, reporting per-component and cumulative
+              explained variance alongside a 2D scatter plot when{' '}
+              <span className="text-white">k</span> is at least 2.
+            </p>
+          </div>
+
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+              02 // OBJECTIVE & PROBLEM STATEMENT
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Compress correlated botanical features into a low-dimensional subspace (
+              <span className="text-white">k = 1..4</span>) that retains maximum variance while
+              preserving visual class structure across <span className="text-white">Setosa</span>,{' '}
+              <span className="text-white">Versicolor</span>, and{' '}
+              <span className="text-white">Virginica</span>.
+            </p>
+          </div>
+        </div>
+
+        {/* 03. Dataset Description, 04. Algorithm Explanation & 05. Workflow / Methodology */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
+              03 // DATASET DESCRIPTION
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Uses the 150-sample Iris dataset with four numeric morphological features (sepal and
+              petal length/width in cm) and three species labels (
+              <span className="text-white">setosa</span>,{' '}
+              <span className="text-white">versicolor</span>,{' '}
+              <span className="text-white">virginica</span>).
+            </p>
+          </div>
+
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+              04 // ALGORITHM EXPLANATION
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Centers and scales features to zero mean and unit variance, computes eigenvectors of
+              the feature covariance matrix (or singular vectors of the scaled data matrix), and
+              orders principal axes by descending explained variance.
+            </p>
+          </div>
+
+          <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-purple-400">
+              05 // WORKFLOW & METHODOLOGY
+            </div>
+            <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+              Standardizes the four numeric Iris dimensions, fits{' '}
+              <span className="text-white">PCA(n_components=k)</span> for{' '}
+              <span className="text-white">k ∈ {'{1, 2, 3, 4}'}</span> via{' '}
+              <span className="text-white">/api/task07/transform</span>, computes explained and
+              cumulative variance ratios, and plots <span className="text-white">PC1 vs PC2</span>{' '}
+              for <span className="text-white">k</span> greater than or equal to 2.
+            </p>
+          </div>
+        </div>
+
+        {/* 06. Interactive Demo */}
+        <div className="space-y-2">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+            06 // INTERACTIVE DEMO — PRINCIPAL COMPONENT COUNT (k) SELECTOR
+          </div>
+          <div className="flex flex-wrap items-center gap-3 p-4 border border-white/10 bg-white/[0.02] font-mono text-xs">
+            <span className="text-zinc-300">COMPONENTS (k):</span>
+            {[1, 2, 3, 4].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => {
+                  setNComponents(c);
+                  runProjection(c);
+                }}
+                className={`px-3 py-1.5 border cursor-pointer ${
+                  nComponents === c
+                    ? 'border-amber-400 bg-amber-400/20 text-amber-200 font-bold'
+                    : 'border-white/15 text-zinc-400'
+                }`}
+              >
+                k = {c}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading && <LoadingState label="COMPUTING_PCA_PROJECTION..." />}
@@ -194,34 +273,113 @@ export default function PCA() {
 
         {result && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="min-w-0">
-                <MetricCard
-                  label="COMPONENTS"
-                  value={result.n_components ?? nComponents}
-                  accent="#F59E0B"
-                />
+            {/* 08. Evaluation Metrics */}
+            <div className="space-y-2">
+              <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+                08 // EVALUATION METRICS — VARIANCE RETAINED
               </div>
-              <div className="min-w-0">
-                <MetricCard label="CUMULATIVE VARIANCE" value={totalCaptured} accent="#10B981" />
-              </div>
-              <div className="min-w-0">
-                <MetricCard
-                  label="PC1 VARIANCE"
-                  value={`${((Number(result.explained_variance_ratio?.[0]) || 0) * 100).toFixed(2)}%`}
-                  accent="#22D3EE"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="min-w-0">
+                  <MetricCard
+                    label="COMPONENTS"
+                    value={result.n_components ?? nComponents}
+                    accent="#F59E0B"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <MetricCard label="CUMULATIVE VARIANCE" value={totalCaptured} accent="#10B981" />
+                </div>
+                <div className="min-w-0">
+                  <MetricCard
+                    label="PC1 VARIANCE"
+                    value={`${((Number(result.explained_variance_ratio?.[0]) || 0) * 100).toFixed(2)}%`}
+                    accent="#22D3EE"
+                  />
+                </div>
               </div>
             </div>
 
-            {nComponents >= 2 && (
-              <ChartContainer
-                title="2D Principal Component Scatter (PC1 vs PC2)"
-                subtitle="Standardized Iris projection"
-              >
-                {renderPcaScatter()}
-              </ChartContainer>
-            )}
+            {/* 07. Visualizations */}
+            <div className="space-y-2">
+              <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+                07 // VISUALIZATIONS — PCA PROJECTION & EXPLAINED VARIANCE BREAKDOWN
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {nComponents >= 2 && (
+                  <div className={explainedRatios.length > 0 ? 'lg:col-span-7' : 'lg:col-span-12'}>
+                    <ChartContainer
+                      title="2D Principal Component Scatter (PC1 vs PC2)"
+                      subtitle="Standardized Iris projection"
+                    >
+                      {renderPcaScatter()}
+                    </ChartContainer>
+                  </div>
+                )}
+
+                {explainedRatios.length > 0 && (
+                  <div className={nComponents >= 2 ? 'lg:col-span-5' : 'lg:col-span-12'}>
+                    <ChartContainer
+                      title="Explained Variance Ratio by Component"
+                      subtitle={`Retained subspace (k = ${result.n_components ?? nComponents})`}
+                    >
+                      <div className="space-y-3 font-mono text-xs">
+                        {explainedRatios.map((ratio, idx) => {
+                          const pct = Math.min(100, Math.max(0, ratio * 100));
+                          const cumVal =
+                            cumList[idx] !== undefined
+                              ? `${(Number(cumList[idx]) * 100).toFixed(1)}%`
+                              : null;
+                          return (
+                            <div key={`pc-${idx + 1}`} className="space-y-1">
+                              <div className="flex justify-between text-zinc-200">
+                                <span>PC{idx + 1}</span>
+                                <span className="text-amber-300">
+                                  {pct.toFixed(2)}%{cumVal ? ` (cum: ${cumVal})` : ''}
+                                </span>
+                              </div>
+                              <div className="h-2 bg-white/10 overflow-hidden">
+                                <div
+                                  className="h-full bg-amber-400"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ChartContainer>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 09. Key Findings & 10. Conclusion */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+                <div className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
+                  09 // KEY FINDINGS
+                </div>
+                <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+                  The first two principal components (<span className="text-white">PC1</span> and{' '}
+                  <span className="text-white">PC2</span>) capture the vast majority of variance in
+                  standardized Iris features, separating <span className="text-white">Setosa</span>{' '}
+                  distinctly while showing expected partial overlap between{' '}
+                  <span className="text-white">Versicolor</span> and{' '}
+                  <span className="text-white">Virginica</span>.
+                </p>
+              </div>
+
+              <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
+                <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+                  10 // CONCLUSION
+                </div>
+                <p className="font-mono text-xs text-zinc-300 leading-relaxed">
+                  PCA provides an effective linear dimensionality reduction lens for inspecting
+                  multi-feature structure and deciding how many components to retain before
+                  downstream visualization or modeling.
+                </p>
+              </div>
+            </div>
           </>
         )}
       </div>

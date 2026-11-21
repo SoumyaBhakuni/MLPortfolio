@@ -4,13 +4,18 @@ import {
   ArrowRight,
   ArrowUpRight,
   Award,
+  BookOpen,
   Check,
   ChevronLeft,
   ChevronRight,
   Copy,
   ExternalLink,
   FileCheck2,
+  FileText,
   Mail,
+  Maximize2,
+  Minimize2,
+  Presentation,
   Sparkles,
   Terminal,
   X
@@ -18,6 +23,240 @@ import {
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import { ML_LABS, SKILL_GROUPS } from '../data/projects';
 import { fetchTasks } from '../services/api';
+
+const PDF_DOCUMENTS = [
+  {
+    id: 'presentation',
+    code: 'DOC_01',
+    title: 'INTERNSHIP_PRESENTATION_DECK',
+    subtitle: 'Slides & Visual Walkthrough — Happieloop Technologies ML Track',
+    file: '/Presentation.pdf',
+    accent: '#22D3EE',
+    icon: Presentation,
+    description:
+      'Flip through presentation slides covering the ten Machine Learning assignments, model architectures, evaluation outcomes, and full-stack Flask + React implementation.'
+  },
+  {
+    id: 'report',
+    code: 'DOC_02',
+    title: 'INDUSTRIAL_TRAINING_REPORT',
+    subtitle: 'Comprehensive Technical Report — Tasks 01 to 10',
+    file: '/Report-File.pdf',
+    accent: '#A855F7',
+    icon: BookOpen,
+    description:
+      'Flip through the detailed internship report documenting problem formulations, dataset characteristics, experimental results, and system architecture.'
+  }
+];
+
+const HEIGHT_MODES = [
+  { id: 'MD', label: '500PX', px: 500 },
+  { id: 'LG', label: '720PX', px: 720 },
+  { id: 'XL', label: '920PX', px: 920 }
+];
+
+function PdfFlipViewer({ doc }) {
+  const containerRef = useRef(null);
+  const [page, setPage] = useState(1);
+  const [pageInput, setPageInput] = useState('1');
+  const [flipDirection, setFlipDirection] = useState('next');
+  const [heightPx, setHeightPx] = useState(500);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const IconComponent = doc.icon || FileText;
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const active = document.fullscreenElement === containerRef.current;
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+      } else {
+        setIsFullscreen(active);
+      }
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!isFullscreen) {
+      setIsFullscreen(true);
+      try {
+        if (containerRef.current?.requestFullscreen) {
+          await containerRef.current.requestFullscreen();
+        }
+      } catch {
+        // Fallback overlay state remains active
+      }
+    } else {
+      setIsFullscreen(false);
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      } catch {
+        // Ignore if not in native fullscreen
+      }
+    }
+  };
+
+  const goToPage = (targetPage, direction = 'next') => {
+    const safePage = Math.max(1, Math.floor(Number(targetPage) || 1));
+    setFlipDirection(direction);
+    setPage(safePage);
+    setPageInput(String(safePage));
+  };
+
+  const handlePageInputSubmit = (e) => {
+    e.preventDefault();
+    goToPage(pageInput, Number(pageInput) >= page ? 'next' : 'prev');
+  };
+
+  const viewerSrc = `${doc.file}#page=${page}&view=FitH&toolbar=1&navpanes=0`;
+
+  return (
+    <div
+      ref={containerRef}
+      className={
+        isFullscreen
+          ? 'fixed inset-0 z-50 bg-[#070709] flex flex-col justify-between p-3 sm:p-5'
+          : 'border border-white/10 bg-[#070709] flex flex-col justify-between'
+      }
+    >
+      {/* Header bar */}
+      <div className="p-4 sm:p-5 border-b border-white/10 bg-white/[0.015] flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-wider" style={{ color: doc.accent }}>
+            {doc.code} // {doc.title}
+          </div>
+          <h3 className="text-base sm:text-lg font-bold text-white mt-0.5">{doc.subtitle}</h3>
+          <p className="mt-1.5 text-xs text-zinc-400 leading-relaxed">{doc.description}</p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-white/15 hover:border-amber-400 font-mono text-[11px] text-zinc-200 hover:text-amber-300 transition-colors cursor-pointer"
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5" />
+                <span>EXIT_FULL_SCREEN</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>FULL_SCREEN</span>
+              </>
+            )}
+          </button>
+
+          <a
+            href={doc.file}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-white/15 hover:border-cyan-400 font-mono text-[11px] text-zinc-200 hover:text-cyan-300 transition-colors"
+          >
+            <span>OPEN_PDF</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+
+      {/* Page-flipping & vertical length controls */}
+      <div className="px-4 sm:px-5 py-2.5 border-b border-white/10 bg-white/[0.02] flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => goToPage(page - 1, 'prev')}
+            disabled={page <= 1}
+            aria-label={`Previous page of ${doc.title}`}
+            className="inline-flex items-center gap-1 px-2.5 py-1 border border-white/15 text-zinc-200 hover:border-cyan-400 hover:text-cyan-300 disabled:opacity-35 disabled:pointer-events-none transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>PREV_PAGE</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => goToPage(page + 1, 'next')}
+            aria-label={`Next page of ${doc.title}`}
+            className="inline-flex items-center gap-1 px-2.5 py-1 border border-white/15 text-zinc-200 hover:border-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
+          >
+            <span>NEXT_PAGE</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+
+          {!isFullscreen && (
+            <div className="ml-2 flex items-center gap-1">
+              <span className="text-[10px] text-zinc-500 hidden sm:inline">LENGTH:</span>
+              {HEIGHT_MODES.map((mode) => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  onClick={() => setHeightPx(mode.px)}
+                  className={`px-2 py-1 border text-[10px] transition-colors cursor-pointer ${
+                    heightPx === mode.px
+                      ? 'border-cyan-400 bg-cyan-400/15 text-cyan-200 font-semibold'
+                      : 'border-white/10 text-zinc-400 hover:border-white/25 hover:text-zinc-200'
+                  }`}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handlePageInputSubmit} className="flex items-center gap-2">
+          <span className="text-[11px] text-zinc-400">PAGE</span>
+          <input
+            type="number"
+            min={1}
+            value={pageInput}
+            onChange={(e) => setPageInput(e.target.value)}
+            aria-label={`Page number for ${doc.title}`}
+            className="w-16 px-2 py-1 bg-[#0A0A0C] border border-white/15 focus:border-cyan-400 outline-none text-center text-xs text-white"
+          />
+          <button
+            type="submit"
+            className="px-2.5 py-1 border border-white/15 hover:border-amber-400 text-[11px] text-zinc-300 hover:text-amber-300 cursor-pointer"
+          >
+            FLIP
+          </button>
+        </form>
+      </div>
+
+      {/* Embedded PDF Viewport */}
+      <div
+        key={`${doc.id}-page-${page}-${flipDirection}-${isFullscreen ? 'fs' : heightPx}`}
+        style={{ height: isFullscreen ? 'calc(100vh - 155px)' : `${heightPx}px` }}
+        className="relative w-full bg-[#090A0D] overflow-hidden transition-[height] duration-200"
+      >
+        <iframe
+          src={viewerSrc}
+          title={`${doc.title} - Page ${page}`}
+          className="w-full h-full border-0"
+        />
+
+        <div className="pointer-events-none absolute top-3 right-3 px-2.5 py-1 bg-[#0A0A0C]/90 border border-white/15 font-mono text-[10px] text-zinc-300 flex items-center gap-1.5">
+          <IconComponent className="w-3 h-3" style={{ color: doc.accent }} />
+          <span>
+            {doc.file} · P.{page}
+          </span>
+        </div>
+      </div>
+
+      {/* Footer note */}
+      <div className="px-4 sm:px-5 py-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] text-zinc-500">
+        <span>USE PREV_PAGE / NEXT_PAGE TO FLIP VIEWPORT</span>
+        <a href={doc.file} download className="text-zinc-400 hover:text-white underline">
+          DOWNLOAD_FILE
+        </a>
+      </div>
+    </div>
+  );
+}
 
 function MultiColorScatterSVG({ compact = false }) {
   const setosaPoints = [
@@ -307,7 +546,7 @@ export default function Home() {
       : labs.filter((lab) => lab.category.toUpperCase() === activeCategoryFilter);
 
   const handleCopyEmail = async () => {
-    const email = 'ml.portfolio@happieloop-labs.dev';
+    const email = 'soumyabhakuni456@gmail.com';
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(email);
@@ -705,6 +944,37 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Dedicated Presentation & Report Section with PDF Page-Flipping, Length & Full-Screen Support */}
+      <section
+        id="deliverables"
+        className="max-w-[1440px] mx-auto border-x border-b border-white/10 bg-[#0A0A0C]/90"
+      >
+        <div className="px-4 sm:px-8 py-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
+          <span className="text-cyan-400 font-semibold">
+            02.5 // PRESENTATION_&_REPORT_DECKS
+          </span>
+          <span className="text-zinc-500">[PDF_PAGE_FLIPPER // PRESENTATION.PDF + REPORT-FILE.PDF]</span>
+        </div>
+
+        <div className="p-6 sm:p-8 border-b border-white/10 space-y-4">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            Internship Presentation &amp; Technical Report
+          </h2>
+          <p className="max-w-3xl text-sm sm:text-base text-zinc-400 leading-relaxed">
+            Dedicated inspection space for both the presentation deck (
+            <span className="text-white">Presentation.pdf</span>) and the full training report (
+            <span className="text-white">Report-File.pdf</span>) with page-by-page navigation,
+            adjustable vertical length, and full-screen viewing.
+          </p>
+        </div>
+
+        <div className="p-6 sm:p-8 grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {PDF_DOCUMENTS.map((doc) => (
+            <PdfFlipViewer key={doc.id} doc={doc} />
+          ))}
+        </div>
+      </section>
+
       <section id="internship" className="max-w-[1440px] mx-auto border-x border-b border-white/10 bg-[#0A0A0C]/90">
         <div className="px-4 sm:px-8 py-4 border-b border-white/10 flex items-center justify-between font-mono text-xs">
           <span className="text-amber-400 font-semibold">03 // INTERNSHIP_&_CERTIFICATION</span>
@@ -789,7 +1059,7 @@ export default function Home() {
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <div className="px-3.5 py-2.5 border border-white/15 bg-white/[0.02] font-mono text-xs text-zinc-200 flex items-center gap-2">
                   <Mail className="w-4 h-4 text-cyan-400" />
-                  <span>ml.portfolio@happieloop-labs.dev</span>
+                  <span>soumyabhakuni456@gmail.com</span>
                 </div>
                 <button
                   type="button"
@@ -813,7 +1083,7 @@ export default function Home() {
                 GITHUB
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/in/soumya-bhakuni-b080162b0"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-2 border border-white/15 text-zinc-300 hover:border-cyan-400/50 hover:text-cyan-300 transition-colors"
