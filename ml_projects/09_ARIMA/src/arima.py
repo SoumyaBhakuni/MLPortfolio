@@ -6,29 +6,52 @@ import numpy as np
 import pandas as pd
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
 
-TASK_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-PROJECT_ROOT = os.path.abspath(os.path.join(TASK_DIR, "..", ".."))
+SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+TASK_DIR = os.path.abspath(os.path.join(SRC_DIR, ".."))
+PROJECT_ROOT = os.path.abspath(os.path.join(SRC_DIR, "..", "..", ".."))
 DATASET_DIR = os.path.join(TASK_DIR, "dataset")
+CSV_PATH = os.path.join(DATASET_DIR, "monthly_sales.csv")
 GRAPHS_DIR = os.path.join(TASK_DIR, "outputs", "graphs")
 STATS_DIR = os.path.join(TASK_DIR, "outputs", "statistics")
 MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "time_series", "arima_model.joblib")
 
 
-def load_or_create_series() -> pd.DataFrame:
-    os.makedirs(DATASET_DIR, exist_ok=True)
-    csv_path = os.path.join(DATASET_DIR, "monthly_sales.csv")
-    if os.path.exists(csv_path):
-        df = pd.read_csv(csv_path)
-        df["date"] = pd.to_datetime(df["date"])
-        return df.set_index("date")
+def load_series() -> pd.Series:
+    """Load monthly_sales.csv indexed by date."""
+    if not os.path.exists(CSV_PATH):
+        raise FileNotFoundError(
+            f"Expected dataset at '{CSV_PATH}'. Ensure monthly_sales.csv is present."
+        )
 
-    dates = pd.date_range("2023-01-01", periods=36, freq="MS")
-    t = np.arange(1, 37, dtype=float)
-    values = 120.0 + 3.5 * t + 14.0 * np.sin(2 * np.pi * t / 12.0)
-    df = pd.DataFrame({"date": dates, "sales": np.round(values, 2)})
-    df.to_csv(csv_path, index=False)
-    return df.set_index("date")
+    df = pd.read_csv(CSV_PATH)
+    if "date" not in df.columns or "sales" not in df.columns:
+        raise ValueError("monthly_sales.csv must contain 'date' and 'sales' columns.")
+
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.dropna(subset=["date", "sales"]).sort_values("date")
+    series = df.set_index("date")["sales"].astype(float)
+
+    if len(series) < 12:
+        raise ValueError("monthly_sales.csv must have at least 12 rows.")
+
+    return series
+
+
+def run_adf(values: np.ndarray, label: str) -> dict:
+    clean = np.asarray(values, dtype=float)
+    clean = clean[~np.isnan(clean)]
+    stat, p_val, used_lag, n_obs, crit_vals, _ = adfuller(clean, autolag="AIC")
+    return {
+        "label": label,
+        "n_obs": int(n_obs),
+        "lags_used": int(used_lag),
+        "adf_stat": round(float(stat), 4),
+        "p_value": round(float(p_val), 6),
+        "critical_values": {k: round(float(v), 4) for k, v in crit_vals.items()},
+        "is_stationary_5pct": bool(p_val < 0.05),
+    }
 
 
 def run_arima(steps: int = 6, order: tuple[int, int, int] = (1, 1, 1)) -> dict:
@@ -36,8 +59,12 @@ def run_arima(steps: int = 6, order: tuple[int, int, int] = (1, 1, 1)) -> dict:
     os.makedirs(STATS_DIR, exist_ok=True)
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
 
-    df = load_or_create_series()
-    series = df["sales"].astype(float)
+    p, d, q = int(order[0]), int(order[1]), int(order[2])
+    series = load_series()
+    values = series.to_numpy(dtype=float)
+
+    raw_adf = run_adf(values, "raw_series")
+    diff_adf = run_adf(np.diff(values, n=d), f"diff_{d}") if d > 0 else None
 
     max_lags = min(12, max(1, len(series) // 2 - 1))
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
@@ -47,7 +74,17 @@ def run_arima(steps: int = 6, order: tuple[int, int, int] = (1, 1, 1)) -> dict:
     plt.savefig(os.path.join(GRAPHS_DIR, "acf_pacf.png"), dpi=150)
     plt.close()
 
-    model = ARIMA(series, order=order)
+    # Train/test holdout evaluation (last 6 observations held out)
+    holdout_size = min(6, max(1, len(values) // 4))
+    train_vals = values[:-holdout_size]
+    test_vals = values[-holdout_size:]
+    val_fitted = ARIMA(train_vals, order=(p, d, q)).fit()
+    val_pred = np.asarray(val_fitted.forecast(steps=holdout_size), dtype=float)
+    mae = float(np.mean(np.abs(test_vals - val_pred)))
+    rmse = float(np.sqrt(np.mean((test_vals - val_pred) ** 2)))
+
+    # Fit on full historical series for final forecast
+    model = ARIMA(series, order=(p, d, q))
     fitted = model.fit()
     joblib.dump(fitted, MODEL_PATH)
 
@@ -58,8 +95,22 @@ def run_arima(steps: int = 6, order: tuple[int, int, int] = (1, 1, 1)) -> dict:
 
     plt.figure(figsize=(9, 4.5))
     plt.plot(series.index, series.values, label="Historical", color="#22D3EE")
-    plt.plot(future_dates, forecast_vals.values, label="Forecast", color="#10B981", marker="o")
-    plt.title(f"ARIMA{order} Forecast ({steps} Periods)")
+    plt.plot(
+        series.index,
+        fitted.fittedvalues,
+        label=f"Fitted ARIMA({p},{d},{q})",
+        color="#F59E0B",
+        linestyle="--",
+        alpha=0.85,
+    )
+    plt.plot(
+        future_dates,
+        forecast_vals.values,
+        label="Forecast",
+        color="#10B981",
+        marker="o",
+    )
+    plt.title(f"ARIMA({p},{d},{q}) Fit & {steps}-Period Forecast")
     plt.xlabel("Date")
     plt.ylabel("Sales")
     plt.legend()
@@ -67,18 +118,24 @@ def run_arima(steps: int = 6, order: tuple[int, int, int] = (1, 1, 1)) -> dict:
     plt.savefig(os.path.join(GRAPHS_DIR, "forecast.png"), dpi=150)
     plt.close()
 
-    train_hist = series.values[:-6]
-    test_hist = series.values[-6:]
-    val_pred = ARIMA(train_hist, order=order).fit().forecast(steps=len(test_hist))
-    mae = float(np.mean(np.abs(test_hist - val_pred)))
-    rmse = float(np.sqrt(np.mean((test_hist - val_pred) ** 2)))
-
     summary = {
-        "order": list(order),
+        "task": "09_ARIMA",
+        "dataset_source": "ml_projects/09_ARIMA/dataset/monthly_sales.csv",
+        "is_synthetic_dataset": True,
+        "order": [p, d, q],
         "steps": steps,
         "aic": round(float(fitted.aic), 4),
+        "bic": round(float(fitted.bic), 4),
         "mae": round(mae, 4),
         "rmse": round(rmse, 4),
+        "stationarity": {
+            "raw_adf": raw_adf,
+            "differenced_adf": diff_adf,
+        },
+        "validation_split": {
+            "train_size": int(len(train_vals)),
+            "test_size": int(holdout_size),
+        },
         "forecast": [round(float(v), 2) for v in forecast_vals.values],
     }
     with open(os.path.join(STATS_DIR, "forecast_summary.json"), "w", encoding="utf-8") as f:

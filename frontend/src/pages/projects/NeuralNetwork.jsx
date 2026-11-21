@@ -106,12 +106,31 @@ export default function NeuralNetwork() {
     <div className="max-w-[1440px] mx-auto border-x border-b border-white/10 bg-[#0A0A0C]/90">
       <SectionHeading
         code="TASK_08"
-        title="NEURAL_NETWORK (HANDWRITTEN DIGIT RECOGNITION)"
+        title="NEURAL_NETWORK (8x8 DIGITS RECOGNITION)"
         rightLabel="/api/task08/predict"
         accent="#A855F7"
       />
 
       <div className="p-6 sm:p-8 space-y-6">
+        {/* Runtime model cache & dataset disclosure strip */}
+        <div className="p-3.5 border border-purple-400/25 bg-purple-500/[0.04] font-mono text-xs text-zinc-300 flex flex-wrap items-center justify-between gap-2">
+          <span>
+            MODEL_ARTIFACT:{' '}
+            <span className="text-white">
+              {result?.model_artifact || 'models/neural_network/digits_mlp.joblib'}
+            </span>{' '}
+            ·{' '}
+            <span className="text-emerald-300">
+              {result?.retrained_on_request === false
+                ? 'LOADED & CACHED IN MEMORY (NO PER-REQUEST RETRAINING)'
+                : 'CACHED INFERENCE'}
+            </span>
+          </span>
+          <span className="text-zinc-400">
+            DATASET: {result?.dataset || 'scikit-learn load_digits (8x8)'}
+          </span>
+        </div>
+
         {/* 01. Overview & 02. Objective / Problem Statement */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="p-4 border border-white/10 bg-white/[0.02] space-y-1.5">
@@ -119,11 +138,11 @@ export default function NeuralNetwork() {
               01 // OVERVIEW
             </div>
             <p className="font-mono text-xs text-zinc-300 leading-relaxed">
-              Trains and evaluates a <span className="text-white">Multi-Layer Perceptron (MLP)</span>{' '}
-              neural network on <span className="text-white">8x8</span> handwritten digit grids (64
-              pixel features) and exposes an interactive <span className="text-white">8x8</span>{' '}
-              canvas with softmax probability output across digits{' '}
-              <span className="text-white">0–9</span>.
+              Evaluates a <span className="text-white">Multi-Layer Perceptron (MLP)</span> neural
+              network trained on the scikit-learn <span className="text-white">8x8</span> digits
+              dataset (64 pixel features) and exposes an interactive{' '}
+              <span className="text-white">8x8</span> canvas with softmax probability output across
+              digits <span className="text-white">0–9</span>.
             </p>
           </div>
 
@@ -132,10 +151,9 @@ export default function NeuralNetwork() {
               02 // OBJECTIVE & PROBLEM STATEMENT
             </div>
             <p className="font-mono text-xs text-zinc-300 leading-relaxed">
-              Classify low-resolution <span className="text-white">8x8</span> grayscale digit
-              patterns into ten digit classes (<span className="text-white">0–9</span>) with high
-              held-out accuracy while inspecting class confidence distributions on custom drawn
-              strokes.
+              Classify <span className="text-white">8x8</span> grayscale digit patterns into ten
+              digit classes (<span className="text-white">0–9</span>) using a saved and cached
+              model while inspecting class confidence distributions on custom drawn strokes.
             </p>
           </div>
         </div>
@@ -147,10 +165,10 @@ export default function NeuralNetwork() {
               03 // DATASET DESCRIPTION
             </div>
             <p className="font-mono text-xs text-zinc-300 leading-relaxed">
-              Uses the <span className="text-white">1,797-row</span> scikit-learn{' '}
-              <span className="text-white">load_digits</span> dataset, where each sample is an{' '}
-              <span className="text-white">8x8</span> matrix (64 flattened pixel intensities in{' '}
-              <span className="text-white">0–16</span>) labeled across digits{' '}
+              Uses the <span className="text-white">1,797-sample</span> scikit-learn{' '}
+              <span className="text-white">load_digits</span> dataset (8×8 handwritten digits, not
+              MNIST), where each sample is an <span className="text-white">8x8</span> grid (64
+              flattened pixel intensities) labeled across digits{' '}
               <span className="text-white">0–9</span>.
             </p>
           </div>
@@ -160,9 +178,9 @@ export default function NeuralNetwork() {
               04 // ALGORITHM EXPLANATION
             </div>
             <p className="font-mono text-xs text-zinc-300 leading-relaxed">
-              Propagates 64 input features through dense hidden layers with nonlinear activations
-              and learns weights via backpropagation with cross-entropy loss, producing a
-              10-element softmax probability vector over digits <span className="text-white">0–9</span>.
+              Propagates 64 input features through dense ReLU hidden layers (`64 -> 32`) trained
+              with cross-entropy loss, producing a 10-element softmax probability vector over digits{' '}
+              <span className="text-white">0–9</span>.
             </p>
           </div>
 
@@ -171,11 +189,11 @@ export default function NeuralNetwork() {
               05 // WORKFLOW & METHODOLOGY
             </div>
             <p className="font-mono text-xs text-zinc-300 leading-relaxed">
-              Splits the <span className="text-white">1,797-row</span>{' '}
-              <span className="text-white">load_digits</span> dataset into training and held-out
-              test sets, evaluates held-out accuracy (<span className="text-white">97.78%</span>),
-              and sends drawn/preset <span className="text-white">8x8</span> 64-value grids to{' '}
-              <span className="text-white">/api/task08/predict</span> for forward inference.
+              Loads and caches <span className="text-white">models/neural_network/digits_mlp.joblib</span>{' '}
+              once on the backend instead of retraining per request, evaluates held-out test
+              accuracy (<span className="text-white">{formattedAccuracy}</span>), and runs forward
+              inference on drawn or preset <span className="text-white">8x8</span> grids via{' '}
+              <span className="text-white">/api/task08/predict</span>.
             </p>
           </div>
         </div>
@@ -317,11 +335,11 @@ export default function NeuralNetwork() {
               09 // KEY FINDINGS
             </div>
             <p className="font-mono text-xs text-zinc-300 leading-relaxed">
-              Even at a coarse <span className="text-white">8x8</span> spatial resolution across{' '}
-              <span className="text-white">1,797</span> samples, nonlinear hidden layers achieve{' '}
-              <span className="text-white">{formattedAccuracy}</span> test accuracy, while stroke
-              thickness and centering strongly shape softmax probability concentration on freehand
-              drawings.
+              Even at an <span className="text-white">8x8</span> spatial resolution across{' '}
+              <span className="text-white">1,797</span> scikit-learn digits samples, nonlinear
+              hidden layers achieve <span className="text-white">{formattedAccuracy}</span> test
+              accuracy, while stroke thickness and centering strongly shape softmax probability
+              concentration on freehand drawings.
             </p>
           </div>
 
@@ -330,9 +348,9 @@ export default function NeuralNetwork() {
               10 // CONCLUSION
             </div>
             <p className="font-mono text-xs text-zinc-300 leading-relaxed">
-              An MLP trained on <span className="text-white">load_digits</span> demonstrates
-              effective multi-class neural pattern recognition and provides an immediate interactive
-              sandbox for testing how pixel geometry affects confidence.
+              Loading and caching <span className="text-white">digits_mlp.joblib</span> on the
+              scikit-learn <span className="text-white">load_digits</span> dataset provides fast,
+              deterministic digit recognition without retraining per request.
             </p>
           </div>
         </div>

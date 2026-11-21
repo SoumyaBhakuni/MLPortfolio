@@ -3,7 +3,8 @@ export const ALLOWED_STATUSES = [
   'IN DEVELOPMENT',
   'IMPLEMENTED',
   'TESTED',
-  'INTEGRATED'
+  'INTEGRATED',
+  'VERIFIED'
 ];
 
 export const ML_LABS = [
@@ -17,7 +18,7 @@ export const ML_LABS = [
     algorithm: 'Statistical Profiling & Multi-Variate EDA',
     category: 'Data Foundation',
     status: 'INTEGRATED',
-    dataset: 'Iris Flower Dataset (150 x 5)',
+    dataset: 'Iris Dataset (150 x 5, Real/Built-In)',
     folder: 'ml_projects/01_EDA',
     endpoint: '/api/task01/eda',
     accent: '#22D3EE',
@@ -41,13 +42,13 @@ export const ML_LABS = [
     algorithm: 'Ordinary Least Squares Linear Regression',
     category: 'Supervised',
     status: 'IMPLEMENTED',
-    dataset: 'Synthetic Housing Dataset (area_sqft -> price_usd)',
+    dataset: 'Synthetic Housing Dataset (150 Rows, Synthetic Demo)',
     folder: 'ml_projects/02_Linear_Regression',
     endpoint: '/api/task02/predict',
     accent: '#10B981',
     summary:
-      'Fits an OLS regression line with MSE, RMSE, MAE, and R2 evaluation plus interactive area-based price prediction.',
-    tags: ['Scikit-Learn', 'Joblib', 'NumPy'],
+      'Fits an OLS regression line on generated housing data (area_sqft -> price_usd) with MSE, RMSE, MAE, and R2 evaluation.',
+    tags: ['Scikit-Learn', 'Joblib', 'NumPy', 'Synthetic'],
     metrics: [
       { label: 'Model', value: 'OLS' },
       { label: 'Predictor', value: 'area_sqft' },
@@ -62,20 +63,20 @@ export const ML_LABS = [
     code: '03',
     title: 'IMAGE_CLASSIFICATION',
     displayName: 'Image Classification Lab',
-    algorithm: 'MobileNetV2 / Pre-Trained Vision Pipeline',
+    algorithm: 'MobileNetV2 (ImageNet) + Labelled Test Set',
     category: 'Deep Learning',
     status: 'IMPLEMENTED',
-    dataset: 'Uploaded / Sample RGB Test Images (224x224)',
+    dataset: 'Labelled Test Images & Uploaded RGB Images (224x224)',
     folder: 'ml_projects/03_Image_Classification',
     endpoint: '/api/task03/classify',
     accent: '#F59E0B',
     summary:
-      'Resizes and preprocesses images to 224x224x3 and returns top-5 class predictions and confidence scores.',
+      'Validates and resizes images to 224x224x3 for MobileNetV2 top-5 predictions, true vs. predicted label checks, and confusion matrix evaluation.',
     tags: ['MobileNetV2', 'Pillow', 'NumPy'],
     metrics: [
       { label: 'Input', value: '224x224x3' },
       { label: 'Top-K', value: 'Top 5' },
-      { label: 'Mode', value: 'Upload/Test' }
+      { label: 'Eval', value: 'True/Pred' }
     ],
     chartType: 'bar-metrics'
   },
@@ -89,15 +90,15 @@ export const ML_LABS = [
     algorithm: 'Standardized K-Means & Elbow Inertia',
     category: 'Unsupervised',
     status: 'IMPLEMENTED',
-    dataset: 'Synthetic Customer Segmentation (Income & Spending)',
+    dataset: 'Synthetic Customer Data (125 Rows, Synthetic Demo)',
     folder: 'ml_projects/04_KMeans_Clustering',
     endpoint: '/api/task04/cluster',
     accent: '#A855F7',
     summary:
-      'Standardizes customer attributes, computes K=1..8 elbow inertias, and assigns cluster labels and centroids.',
-    tags: ['Scikit-Learn', 'StandardScaler', 'Pandas'],
+      'Standardizes customer income and spending attributes, computes elbow inertias, and assigns clusters with explicit synthetic data disclosure.',
+    tags: ['Scikit-Learn', 'StandardScaler', 'Pandas', 'Synthetic'],
     metrics: [
-      { label: 'K Range', value: '2 - 10' },
+      { label: 'Rows', value: '125' },
       { label: 'Scaling', value: 'Standard' },
       { label: 'Elbow', value: 'K=1..8' }
     ],
@@ -113,7 +114,7 @@ export const ML_LABS = [
     algorithm: 'CART Decision Tree with Max Depth Control',
     category: 'Supervised',
     status: 'IMPLEMENTED',
-    dataset: 'Iris Flower Dataset (150 x 4)',
+    dataset: 'Iris Dataset (150 x 4, Real/Built-In)',
     folder: 'ml_projects/05_Decision_Tree',
     endpoint: '/api/task05/predict',
     accent: '#22D3EE',
@@ -137,15 +138,15 @@ export const ML_LABS = [
     algorithm: 'Multinomial Naive Bayes + TF-IDF',
     category: 'Supervised',
     status: 'IMPLEMENTED',
-    dataset: 'SMS Spam Collection',
+    dataset: 'SMS Spam Collection (5,574 Rows, Public Dataset)',
     folder: 'ml_projects/06_Naive_Bayes',
     endpoint: '/api/task06/predict',
     accent: '#10B981',
     summary:
-      'Normalizes text, vectorizes tokens via TF-IDF, and classifies messages as Spam or Not Spam with probabilities.',
+      'Normalizes text, vectorizes tokens via TF-IDF, and classifies SMS messages as Spam or Ham with precision, recall, and F1 metrics.',
     tags: ['MultinomialNB', 'TF-IDF', 'NLP'],
     metrics: [
-      { label: 'Vector', value: 'TF-IDF' },
+      { label: 'Messages', value: '5,574' },
       { label: 'Classes', value: 'Spam/Ham' },
       { label: 'Model', value: 'Multinomial' }
     ],
@@ -161,7 +162,7 @@ export const ML_LABS = [
     algorithm: 'Standardized PCA & Variance Projection',
     category: 'Unsupervised',
     status: 'IMPLEMENTED',
-    dataset: 'Iris Flower Dataset (4D -> kD)',
+    dataset: 'Iris Dataset (4D -> kD, Real/Built-In)',
     folder: 'ml_projects/07_PCA',
     endpoint: '/api/task07/transform',
     accent: '#F59E0B',
@@ -182,20 +183,20 @@ export const ML_LABS = [
     code: '08',
     title: 'NEURAL_NETWORK',
     displayName: 'Neural Network Digit Recognizer',
-    algorithm: 'Multi-Layer Perceptron (ReLU / Softmax Probs)',
+    algorithm: 'Multi-Layer Perceptron (Cached Joblib Model)',
     category: 'Deep Learning',
     status: 'IMPLEMENTED',
-    dataset: 'Scikit-Learn Digits Dataset (1,797 x 8x8)',
+    dataset: 'Scikit-Learn 8x8 Digits Dataset (1,797 Samples)',
     folder: 'ml_projects/08_Neural_Network',
     endpoint: '/api/task08/predict',
     accent: '#A855F7',
     summary:
-      'Accepts drawn canvas pixels (8x8) and predicts digits 0-9 with class probabilities and model metrics.',
-    tags: ['MLPClassifier', 'ReLU', 'Canvas'],
+      'Loads cached digits_mlp.joblib on the 8x8 scikit-learn Digits dataset and predicts digits 0-9 with softmax probabilities.',
+    tags: ['MLPClassifier', '8x8 Digits', 'Joblib'],
     metrics: [
       { label: 'Digits', value: '0 - 9' },
-      { label: 'Hidden', value: '(64, 32)' },
-      { label: 'Canvas', value: '8x8' }
+      { label: 'Grid', value: '8x8 (64)' },
+      { label: 'Cache', value: 'Joblib' }
     ],
     chartType: 'regression-line'
   },
@@ -206,20 +207,20 @@ export const ML_LABS = [
     code: '09',
     title: 'ARIMA_FORECASTING',
     displayName: 'ARIMA Time-Series Forecasting',
-    algorithm: 'ARIMA (p, d, q) Time-Series Model',
+    algorithm: 'ARIMA (p, d, q) with ADF Stationarity Check',
     category: 'Time Series',
     status: 'IMPLEMENTED',
-    dataset: 'Monthly Series Dataset (36 Periods)',
+    dataset: 'Monthly Sales CSV (36 Periods, Synthetic Demo)',
     folder: 'ml_projects/09_ARIMA',
     endpoint: '/api/task09/forecast',
     accent: '#22D3EE',
     summary:
-      'Fits ARIMA(p, d, q) on monthly series data and forecasts 1 to 24 future periods with AIC, MAE, and RMSE.',
-    tags: ['Statsmodels', 'ARIMA', 'Forecast'],
+      'Reads monthly_sales.csv, runs ADF stationarity checks, separates train/test validation from future forecasts, and reports AIC, MAE, and RMSE.',
+    tags: ['Statsmodels', 'ARIMA', 'ADF', 'Synthetic'],
     metrics: [
-      { label: 'Horizon', value: '1 - 24' },
+      { label: 'Periods', value: '36' },
       { label: 'Default', value: '(1,1,1)' },
-      { label: 'Criterion', value: 'AIC/RMSE' }
+      { label: 'Checks', value: 'ADF/AIC' }
     ],
     chartType: 'regression-line'
   },
@@ -233,7 +234,7 @@ export const ML_LABS = [
     algorithm: 'Binary SVC (Setosa vs Versicolor)',
     category: 'Supervised',
     status: 'IMPLEMENTED',
-    dataset: 'Iris Dataset (Two Species)',
+    dataset: 'Iris Dataset (Two Species, Real/Built-In)',
     folder: 'ml_projects/10_SVM',
     endpoint: '/api/task10/predict',
     accent: '#10B981',
